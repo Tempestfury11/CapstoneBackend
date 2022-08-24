@@ -110,11 +110,10 @@ bd.password = await hash(bd.password,16);
             if(err){
                 console.log(err);
                 res.send(`<h1>${err}.</h1><br>
-                <a href="/register">Go Back.</a>
                 `)
             } else{
                 console.log(results);
-                res.redirect('/login')
+                res.send(`register successful`)
             }
         });
 } catch(e) {
@@ -137,18 +136,18 @@ app.post('/login',bodyParser.json(),async(req,res)=>{
                 console.log(err);
                 res.send(`
                 <h1>${err}.</h1><br>
-                <a href="/register">Go Back.</a>
+               
                 `)
             }else{
                 switch(true){
                     case(await compare(password,results[0].password)):
-                    res.redirect('/products1')
+                    res.send('successfull login')
                     break
                     default:
                         console.log("Logged In Successfully.");
                         //res.redirect('/login');
                         res.send(`        <h1>Email or Password was Incorrect.<br>Please Insert the correct Email & Password.</h1><br>
-                        <a href="/login">Go Back.</a>
+                       
                         `);
                     };
                 }
