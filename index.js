@@ -82,15 +82,7 @@ router.get("/products", (req, res) => {
         });
     });
 });
-// connect to database (TO MAKE SURE ITS CONNECTED).
-db.connect( (err) => {
-    if(err){
-        console.log(`mySQL is not connected...<br>
-        ${err}`)
-    } else{
-        console.log('mySQL connected...')
-    }
-});
+
 
 //register
 app.post('/register',bodyParser.json(),async(req,res)=>{
@@ -122,46 +114,44 @@ bd.password = await hash(bd.password,16);
 }
 });
 //login
-app.post('/login',bodyParser.json(),async(req,res)=>{
-    try{
-        //get email and password
-        const{email,password} = req.body;
-
-        //mySQL query
-        const strQry =
-        `
-        SELECT email, password FROM users WHERE email = '${email}';
+app.post('/login', bodyParser.json(),
+    (req, res) => {
+        try {
+            // Get email and password
+            const { email, password } = req.body;
+            const strQry =
+                `
+        SELECT email, password
+        FROM users
+        WHERE email = '${email}';
         `;
-        db.query(strQry,async(err,results)=>{
-            if(err){
-                console.log(err);
-                res.send(`
-                <h1>${err}.</h1><br>
-               
-                `)
-            }else{
-                switch(true){
-                    case(await compare(password,results[0].password)):
-                    res.send('successfull login')
-                    break
+            db.query(strQry, async (err, results) => {
+                if (err) throw err;
+                switch (true) {
+                    case (await compare(password, results[0].password)):
+                        jwt.sign(JSON.stringify(results[0]), process.env.secret, (err, token) => {
+                            if(err) throw err;
+                            res.json({
+                                status: 200,
+                                user: results,
+                                token: token
+                            })
+                        });
+                        break
                     default:
-                        console.log("Logged In Successfully.");
-                        //res.redirect('/login');
-                        res.send(`        <h1>Email or Password was Incorrect.<br>Please Insert the correct Email & Password.</h1><br>
-                       
-                        `);
-                    };
+                      res.json({
+                        status: 400,
+                        msg: "Login Failed."
+                    })
                 }
-                })
-            } catch(e){
-                console.log(`FROM LOGIN ${e.message}.`);
-                res.send(`
-                ${e.message}.<br>
-                <a href="/login">Go Back.</a>
-                `)
-            }
+            })
+        } catch (e) {
+            console.log(`From login: ${e.message}`);
         }
-);
+    });
+
+
+
 // get all users
 router.get('/users',(req,res)=>{
     //mySQL query
