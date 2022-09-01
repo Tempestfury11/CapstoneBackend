@@ -15,23 +15,25 @@ const port = parseInt(process.env.PORT) || 4000;
 
 // SERVER LISTEN
 app.listen(port, () => {
-    console.log(`Server is running on port ${port}`);
+    console.log(`Server is running on port http://localhost:${port}`);
 });
 
 // allow access to fetch data from the api externally by  Seting header
 app.use((req, res, next) => {
+    res.setHeader("mode", "no-cors");
     res.setHeader("Access-Control-Allow-Origin", "*");
-    res.setHeader("Access-Control-Allow-Headers", "*");
+    // res.setHeader("Access-Control-Allow-Headers", "*");
     res.setHeader("Access-Control-Allow-Methods", "*");
+    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
     res.setHeader("Access-Control-Allow-*", "*");
     next();
 });
 
 app.use(cors({
-    origin: ['http://127.0.0.1:8080', 'http://localhost:8080'],
+    mode: 'no-cors',
+    origin: ['http://127.0.0.1:8080', 'http://localhost:8080', 'http://192.168.9.62:8080/'],
     credentials: true
 }));
-
 // add cors to the app variable
 app.use(
     router,
@@ -54,11 +56,11 @@ router.get("/register", (req, res) => {
     });
 });
 // Login PAGE ROUTER
-router.get("/login", (req, res) => {
-    res.status(200).sendFile("./views/login.html", {
-        root: __dirname
-    });
-});
+// router.get("/login", (req, res) => {
+//     res.status(200).sendFile("./views/login.html", {
+//         root: __dirname
+//     });
+// });
 
 // products PAGE ROUTER
 router.get("/products1", (req, res) => {
@@ -106,7 +108,7 @@ bd.password = await hash(bd.password,16);
                 `)
             } else{
                 console.log(results);
-                res.send(`register successful`)
+                res.json({msg : `register successful`})
             }
         });
 } catch(e) {
