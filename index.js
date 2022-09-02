@@ -152,8 +152,6 @@ app.post('/login', bodyParser.json(),
         }
     });
 
-
-
 // get all users
 router.get('/users',(req,res)=>{
     //mySQL query
@@ -280,7 +278,7 @@ app.delete('/products/:id',(req, res)=>{
     `;
     db.query(strQry, [req.params.id], (err,results)=>{
         if(err) throw err;
-        res.send(`PRODUCTS WAS DELETED`);
+        res.json({msg : `PRODUCTS WAS DELETED`});
     });
 });
 //Update products
