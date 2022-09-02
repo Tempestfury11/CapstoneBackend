@@ -290,7 +290,7 @@ app.delete('/products/:id',(req, res)=>{
             status:400,
             msg: `${err}`
         });
-        res.json({msg : `PRODUCTS WAS DELETED`});
+        res.json({msg : `delete`});
     });
 });
 //Update products
