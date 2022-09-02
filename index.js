@@ -195,8 +195,16 @@ app.delete('/users/:id',(req, res)=>{
     ALTER TABLE users AUTO_INCREMENT = 1;
     `;
     db.query(strQry, [req.params.id], (err,results)=>{
-        if(err) throw err;
-        res.send(`USERS WAS DELETED`);
+        if(err) 
+        res.json({
+            status:400,
+            msg: `${err}`
+    });;
+        // else
+        res.json({
+            status:200,
+            msg: `USERS WAS DELETED`
+    });
     });
 });
 //Update user
@@ -277,7 +285,11 @@ app.delete('/products/:id',(req, res)=>{
     ALTER TABLE products AUTO_INCREMENT = 1;
     `;
     db.query(strQry, [req.params.id], (err,results)=>{
-        if(err) throw err;
+        if(err)
+        res.json({
+            status:400,
+            msg: `${err}`
+        });
         res.json({msg : `PRODUCTS WAS DELETED`});
     });
 });
@@ -321,7 +333,6 @@ router.get('/products',(req,res)=>{
     })
 });
 // CART
-
 //*ADD CART ITEMS FROM SPECIFIC USER*//
 router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
 
@@ -398,20 +409,19 @@ db.query(strQry, [req.params.id], (err, results) => {
 //*DELETE CART ITEMS FROM SPECIFIC USER*
 router.delete("/users/:id/cart", (req, res) => {
 // Query
-const strQry = `
-UPDATE users
-SET cart=null
-WHERE id=?
-`;
+const strQry = `UPDATE users SET cart=null WHERE id=?`;
 db.query(strQry, [req.params.id], (err, results) => {
-    if (err) throw err;
+    if (err) 
+    res.json({
+        status:400,
+        meg: `${err}`
+    });
     res.json({
         status: 200,
         results: results,
     });
 });
 });
-
 // Delete by cart id
 router.delete('/users/:id/cart/:cartId', (req,res)=>{
 const delSingleCartId = `
@@ -443,13 +453,13 @@ db.query(delSingleCartId, (err,results)=>{
         }else{
             res.json({
                 status:400,
-                result: "This user has an empty cart"
+                meg: `${err}`
             })
         }
     }else{
         res.json({
             status:400,
-            result: "There is no user with that id"
+            meg: `${err}`
         });
     }
 })
