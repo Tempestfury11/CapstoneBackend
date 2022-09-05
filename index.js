@@ -17,7 +17,6 @@ const port = parseInt(process.env.PORT) || 4000;
 app.listen(port, () => {
     console.log(`Server is running on port http://localhost:${port}`);
 });
-
 // allow access to fetch data from the api externally by  Seting header
 app.use((req, res, next) => {
     res.setHeader("mode", "no-cors");
@@ -28,7 +27,6 @@ app.use((req, res, next) => {
     res.setHeader("Access-Control-Allow-*", "*");
     next();
 });
-
 app.use(cors({
     mode: 'no-cors',
     origin: ['http://127.0.0.1:8080', 'http://localhost:8080', 'http://192.168.9.62:8080/'],
@@ -55,20 +53,12 @@ router.get("/register", (req, res) => {
         root: __dirname
     });
 });
-// Login PAGE ROUTER
-// router.get("/login", (req, res) => {
-//     res.status(200).sendFile("./views/login.html", {
-//         root: __dirname
-//     });
-// });
-
 // products PAGE ROUTER
 router.get("/products1", (req, res) => {
     res.status(200).sendFile("./views/products.html", {
         root: __dirname
     });
 });
-
 // GET ALL PRODUCTS
 router.get("/products", (req, res) => {
     // Query
@@ -84,8 +74,6 @@ router.get("/products", (req, res) => {
         });
     });
 });
-
-
 //register
 app.post('/register',bodyParser.json(),async(req,res)=>{
     try{const bd = req.body;
@@ -151,7 +139,6 @@ app.post('/login', bodyParser.json(),
             console.log(`From login: ${e.message}`);
         }
     });
-
 // get all users
 router.get('/users',(req,res)=>{
     //mySQL query
@@ -228,7 +215,6 @@ router.put("/users/:id",bodyParser.json(),async(req,res)=>{
         }
     });
 });
-
 // create products
 app.post('/products', bodyParser.json(),
     (req, res)=> {
@@ -332,6 +318,7 @@ router.get('/products',(req,res)=>{
         }
     })
 });
+
 // CART
 //*ADD CART ITEMS FROM SPECIFIC USER*//
 router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
@@ -371,7 +358,6 @@ router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
     })
 }})
 });
-
 //*GET CART ITEMS FROM SPECIFIC USER*
 router.get("/users/:id/cart", (req, res) => {
 // Query
@@ -388,7 +374,6 @@ db.query(strQry, [req.params.id], (err, results) => {
     });
 });
 });
-
 //*GET single ITEMS FROM SPECIFIC USER*
 router.get("/users/:id/cart/:id", (req, res) => {
 // Query
@@ -405,7 +390,6 @@ db.query(strQry, [req.params.id], (err, results) => {
     });
 });
 });
-
 //*DELETE CART ITEMS FROM SPECIFIC USER*
 router.delete("/users/:id/cart", (req, res) => {
 // Query
