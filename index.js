@@ -408,7 +408,7 @@ router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
 router.get("/users/:id/cart", (req, res) => {
 // Query
 const strQry = `
-SELECT *
+SELECT cart
 FROM users
 WHERE id = ?;
 `;
@@ -416,7 +416,7 @@ db.query(strQry, [req.params.id], (err, results) => {
     if (err) throw err;
     res.json({
         status: 200,
-        results: JSON.parse(results[0].cart),
+        results: JSON.parse(JSON.stringify(results)),
     });
 });
 });
