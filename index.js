@@ -59,7 +59,6 @@ router.get("/products1", (req, res) => {
         root: __dirname
     });
 });
-
 // login PAGE ROUTER
 router.get("/login", (req, res) => {
     res.status(200).sendFile("./views/login.html", {
@@ -145,7 +144,7 @@ app.post('/login', bodyParser.json(),
         } catch (e) {
             console.log(`From login: ${e.message}`);
         }
-    });
+});
 // get all users
 router.get('/users',(req,res)=>{
     //mySQL query
