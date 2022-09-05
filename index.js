@@ -59,6 +59,13 @@ router.get("/products1", (req, res) => {
         root: __dirname
     });
 });
+
+// login PAGE ROUTER
+router.get("/login", (req, res) => {
+    res.status(200).sendFile("./views/login.html", {
+        root: __dirname
+    });
+});
 // GET ALL PRODUCTS
 router.get("/products", (req, res) => {
     // Query
@@ -111,7 +118,7 @@ app.post('/login', bodyParser.json(),
             const { email, password } = req.body;
             const strQry =
                 `
-        SELECT email, password
+        SELECT *
         FROM users
         WHERE email = '${email}';
         `;
@@ -123,7 +130,7 @@ app.post('/login', bodyParser.json(),
                             if(err) throw err;
                             res.json({
                                 status: 200,
-                                user: results,
+                                user: results[0],
                                 token: token
                             })
                         });
@@ -321,8 +328,44 @@ router.get('/products',(req,res)=>{
 
 // CART
 //*ADD CART ITEMS FROM SPECIFIC USER*//
-router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
+// router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
 
+//     // mySQL query
+//     let cart = `SELECT cart FROM users WHERE id = ${req.params.id};`;
+//     // function
+//     db.query(cart, (err, results) => {
+//         if (err) throw err
+//         if (results.length > 0) {
+//             let cart;
+//             if (results[0].cart == null) {
+//                 cart = []
+//             } else {
+//                 cart = JSON.parse(results[0].cart)
+//             }
+
+//     let { Prod_id } = req.body;
+//     // mySQL query
+//     let product = `Select * FROM products WHERE id = ?`;
+//     // function
+//     db.query(product, Prod_id, (err, productData) => {
+//         if (err) res.send(`${err}`)
+//         let data = {
+//             cart_id : cart.length + 1,
+//             productData
+//         }
+//         cart.push(data)
+//         console.log(cart);
+//         let updateCart = `UPDATE users SET cart = ? WHERE id = ${req.params.id}`
+//         db.query(updateCart, JSON.stringify(cart), (err, results) => {
+//             if (err) res.send(`${err}`)
+//             res.json({
+//                 cart: results
+//             })
+//         })
+//     })
+// }})
+// });
+router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
     // mySQL query
     let cart = `SELECT cart FROM users WHERE id = ${req.params.id};`;
     // function
@@ -335,28 +378,31 @@ router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
             } else {
                 cart = JSON.parse(results[0].cart)
             }
-
-    let { Prod_id } = req.body;
-    // mySQL query
-    let product = `Select * FROM products WHERE id = ?`;
-    // function
-    db.query(product, Prod_id, (err, productData) => {
-        if (err) res.send(`${err}`)
-        let data = {
-            cart_id : cart.length + 1,
-            productData
-        }
-        cart.push(data)
-        console.log(cart);
-        let updateCart = `UPDATE users SET cart = ? WHERE id = ${req.params.id}`
-        db.query(updateCart, JSON.stringify(cart), (err, results) => {
-            if (err) res.send(`${err}`)
-            res.json({
-                cart: results
+            let { id } = req.body;
+            // mySQL query
+            let product = `Select * FROM products WHERE id = ?`;
+            // function
+            db.query(product, id, (err, productData) => {
+                if (err) res.send(`${err}`)
+                let data = {
+                    cart_id: cart.length + 1,
+                    productData
+                }
+                cart.push(data)
+                console.log(cart);
+                let updateCart = `UPDATE users SET cart = ? WHERE id = ${req.params.id}`
+                db.query(updateCart, JSON.stringify(cart), (err, results) => {
+                    if (err) res.json({
+                        status: 400,
+                        msg:`${err}`})
+                    res.json({
+                        status: 200,
+                        cart: results
+                    })
+                })
             })
-        })
+        }
     })
-}})
 });
 //*GET CART ITEMS FROM SPECIFIC USER*
 router.get("/users/:id/cart", (req, res) => {
