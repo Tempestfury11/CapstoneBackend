@@ -338,7 +338,7 @@ router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
 
     let { Prod_id } = req.body;
     // mySQL query
-    let product = `Select * FROM products WHERE Prod_id = ?`;
+    let product = `Select * FROM products WHERE id = ?`;
     // function
     db.query(product, Prod_id, (err, productData) => {
         if (err) res.send(`${err}`)
