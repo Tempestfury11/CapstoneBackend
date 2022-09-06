@@ -1,328 +1,343 @@
 // IMPORTING MODULES
-require('dotenv').config();
-const express = require('express');
-const bodyParser = require('body-parser');
-const cors = require('cors');
-const path = require('path');
-const db = require('./config/dbconn');
-const { compare, hash } = require('bcrypt');
-const { stringify } = require('querystring');
-const jwt = require('jsonwebtoken');
-const cp = require('cookie-parser');
+require("dotenv").config();
+const express = require("express");
+const bodyParser = require("body-parser");
+const cors = require("cors");
+const path = require("path");
+const db = require("./config/dbconn");
+const { compare, hash } = require("bcrypt");
+const { stringify } = require("querystring");
+const jwt = require("jsonwebtoken");
+const cp = require("cookie-parser");
 const app = express();
 const router = express.Router();
 const port = parseInt(process.env.PORT) || 4000;
 
 // SERVER LISTEN
 app.listen(port, () => {
-    console.log(`Server is running on port http://localhost:${port}`);
+  console.log(`Server is running on port http://localhost:${port}`);
 });
 // allow access to fetch data from the api externally by  Seting header
 app.use((req, res, next) => {
-    res.setHeader("mode", "no-cors");
-    res.setHeader("Access-Control-Allow-Origin", "*");
-    // res.setHeader("Access-Control-Allow-Headers", "*");
-    res.setHeader("Access-Control-Allow-Methods", "*");
-    res.setHeader("Access-Control-Allow-Headers", "Content-Type");
-    res.setHeader("Access-Control-Allow-*", "*");
-    next();
+  res.setHeader("mode", "no-cors");
+  res.setHeader("Access-Control-Allow-Origin", "*");
+  // res.setHeader("Access-Control-Allow-Headers", "*");
+  res.setHeader("Access-Control-Allow-Methods", "*");
+  res.setHeader("Access-Control-Allow-Headers", "Content-Type");
+  res.setHeader("Access-Control-Allow-*", "*");
+  next();
 });
-app.use(cors({
-    mode: 'no-cors',
-    origin: ['http://127.0.0.1:8080', 'http://localhost:8080', 'http://192.168.9.62:8080/'],
-    credentials: true
-}));
+app.use(
+  cors({
+    mode: "no-cors",
+    origin: [
+      "http://127.0.0.1:8080",
+      "http://localhost:8080",
+      "http://192.168.9.62:8080/",
+    ],
+    credentials: true,
+  })
+);
 // add cors to the app variable
 app.use(
-    router,
-    cors(),
-    express.json(),
-    express.urlencoded({
-        extended: true,
-    })
+  router,
+  cors(),
+  express.json(),
+  express.urlencoded({
+    extended: true,
+  })
 );
 // HOME PAGE ROUTER
 router.get("/", (req, res) => {
-    res.status(200).sendFile("./views/index.html", {
-        root: __dirname
-    });
+  res.status(200).sendFile("./views/index.html", {
+    root: __dirname,
+  });
 });
 // REGISTER PAGE ROUTER
 router.get("/register", (req, res) => {
-    res.status(200).sendFile("./views/register.html", {
-        root: __dirname
-    });
+  res.status(200).sendFile("./views/register.html", {
+    root: __dirname,
+  });
 });
 // products PAGE ROUTER
 router.get("/products1", (req, res) => {
-    res.status(200).sendFile("./views/products.html", {
-        root: __dirname
-    });
+  res.status(200).sendFile("./views/products.html", {
+    root: __dirname,
+  });
 });
 // login PAGE ROUTER
 router.get("/login", (req, res) => {
-    res.status(200).sendFile("./views/login.html", {
-        root: __dirname
-    });
+  res.status(200).sendFile("./views/login.html", {
+    root: __dirname,
+  });
 });
 // GET ALL PRODUCTS
 router.get("/products", (req, res) => {
-    // Query
-    const strQry = `
+  // Query
+  const strQry = `
     SELECT *
     FROM products;
     `;
-    db.query(strQry, (err, results) => {
-        if (err) throw err;
-        res.json({
-            status: 200,
-            results: results,
-        });
+  db.query(strQry, (err, results) => {
+    if (err) throw err;
+    res.json({
+      status: 200,
+      results: results,
     });
+  });
 });
 //register
-app.post('/register',bodyParser.json(),async(req,res)=>{
-    try{const bd = req.body;
+app.post("/register", bodyParser.json(), async (req, res) => {
+  try {
+    const bd = req.body;
     // Encrypting a password
     //Default value of salt is 10.
-bd.password = await hash(bd.password,16);
+    bd.password = await hash(bd.password, 16);
 
     //mySQL query
-    const strQry =
-    `
+    const strQry = `
     insert into users(firstName, lastName, email, phoneNo, password) value(?, ?, ?
         , ?, ?);
     `;
-    db.query(strQry,
-        [bd.firstName,bd.lastName,bd.email,bd.phoneNo,bd.password],
-        (err,results)=> {
-            if(err){
-                console.log(err);
-                res.send(`<h1>${err}.</h1><br>
-                `)
-            } else{
-                console.log(results);
-                res.json({msg : `register successful`})
-            }
-        });
-} catch(e) {
+    db.query(
+      strQry,
+      [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password],
+      (err, results) => {
+        if (err) {
+          console.log(err);
+          res.send(`<h1>${err}.</h1><br>
+                `);
+        } else {
+          console.log(results);
+          res.json({ msg: `register successful` });
+        }
+      }
+    );
+  } catch (e) {
     console.log(`FROM REGISTER: ${e.message}`);
-}
+  }
 });
 //login
-app.post('/login', bodyParser.json(),
-    (req, res) => {
-        try {
-            // Get email and password
-            const { email, password } = req.body;
-            const strQry =
-                `
+app.post("/login", bodyParser.json(), (req, res) => {
+  try {
+    // Get email and password
+    const { email, password } = req.body;
+    const strQry = `
         SELECT *
         FROM users
         WHERE email = '${email}';
         `;
-            db.query(strQry, async (err, results) => {
-                if (err) throw err;
-                switch (true) {
-                    case (await compare(password, results[0].password)):
-                        jwt.sign(JSON.stringify(results[0]), process.env.secret, (err, token) => {
-                            if(err) throw err;
-                            res.json({
-                                status: 200,
-                                user: results[0],
-                                token: token
-                            })
-                        });
-                        break
-                    default:
-                      res.json({
-                        status: 400,
-                        msg: "Login Failed."
-                    })
-                }
-            })
-        } catch (e) {
-            console.log(`From login: ${e.message}`);
-        }
+    db.query(strQry, async (err, results) => {
+      if (err) throw err;
+      switch (true) {
+        case await compare(password, results[0].password):
+          jwt.sign(
+            JSON.stringify(results[0]),
+            process.env.secret,
+            (err, token) => {
+              if (err) throw err;
+              res.json({
+                status: 200,
+                user: results[0],
+                token: token,
+              });
+            }
+          );
+          break;
+        default:
+          res.json({
+            status: 400,
+            msg: "Login Failed.",
+          });
+      }
+    });
+  } catch (e) {
+    console.log(`From login: ${e.message}`);
+  }
 });
 // get all users
-router.get('/users',(req,res)=>{
-    //mySQL query
-    const strQry =`SELECT * FROM users`;
-    db.query(strQry,(err,results)=>{
-        if(err){
-            console.log(err);
-            res.send(`
+router.get("/users", (req, res) => {
+  //mySQL query
+  const strQry = `SELECT * FROM users`;
+  db.query(strQry, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.send(`
             <h1>${err}.</h1><br>
             <a href="/">Go Back.</a>
-            `)
-        } else{
-            res.json({
-                status:200,
-                results:results,
-            })
-        }
-    })
+            `);
+    } else {
+      res.json({
+        status: 200,
+        results: results,
+      });
+    }
+  });
 });
 // get 1 user
-router.get('/users/:id',(req,res)=>{
-    //mySQL query
-    const strQry =
-    `
+router.get("/users/:id", (req, res) => {
+  //mySQL query
+  const strQry = `
     SELECT * FROM users WHERE id = ?;
     `;
-    db.query(strQry,[req.params.id],(err,results) =>{
-        if(err)throw err;
-        res.json({
-            status:200,
-            results:(results.length<=0)?'Sorry no product was found':results
-        })
-    })
+  db.query(strQry, [req.params.id], (err, results) => {
+    if (err) throw err;
+    res.json({
+      status: 200,
+      results: results.length <= 0 ? "Sorry no product was found" : results,
+    });
+  });
 });
 //delete user
-app.delete('/users/:id',(req, res)=>{
-    //mySQL query
-    const strQry =
-    `
+app.delete("/users/:id", (req, res) => {
+  //mySQL query
+  const strQry = `
     DELETE FROM users WHERE id = ?;
     ALTER TABLE users AUTO_INCREMENT = 1;
     `;
-    db.query(strQry, [req.params.id], (err,results)=>{
-        if(err) 
-        res.json({
-            status:400,
-            msg: `${err}`
-    });;
-        // else
-        res.json({
-            status:200,
-            msg: `USERS WAS DELETED`
+  db.query(strQry, [req.params.id], (err, results) => {
+    if (err)
+      res.json({
+        status: 400,
+        msg: `${err}`,
+      });
+    // else
+    res.json({
+      status: 200,
+      msg: `USERS WAS DELETED`,
     });
-    });
+  });
 });
 //Update user
-router.put("/users/:id",bodyParser.json(),async(req,res)=>{
-    const {firstName, lastName, email, phoneNo, password} = req.body;
-    let sql = `UPDATE users SET ? WHERE id =${req.params.id}`;
-    const user = {
-        firstName, lastName,email,phoneNo,password
-    };
-    db.query(sql,user,(err)=>{
-        if(err){
-            console.log(err);
-            res.send(`
+router.put("/users/:id", bodyParser.json(), async (req, res) => {
+  const { firstName, lastName, email, phoneNo, password } = req.body;
+  let sql = `UPDATE users SET ? WHERE id =${req.params.id}`;
+  const user = {
+    firstName,
+    lastName,
+    email,
+    phoneNo,
+    password,
+  };
+  db.query(sql, user, (err) => {
+    if (err) {
+      console.log(err);
+      res.send(`
             <h1>${err}.</h1><br>
             <a href="/register">Go Back.</a>
-            `)
-        } else{
-            res.json({
-                msg:"Updated user Successfully",
-            });
-        }
-    });
+            `);
+    } else {
+      res.json({
+        msg: "Updated user Successfully",
+      });
+    }
+  });
 });
 // create products
-app.post('/products', bodyParser.json(),
-    (req, res)=> {
-    try{
-       const {title, price, category, description, img} = req.body;
-         // mySQL query
-    const strQry =
-    `
+app.post("/products", bodyParser.json(), (req, res) => {
+  try {
+    const { title, price, category, description, img } = req.body;
+    // mySQL query
+    const strQry = `
     INSERT INTO products (title, price, category, description, img) values (?, ?, ?, ?, ?)
     `;
-        //
-        db.query(strQry,
-            [title, price, category, description, img],
-            (err, results)=> {
-                if(err){
-console.log(err);
-res.send(
-                `
+    //
+    db.query(
+      strQry,
+      [title, price, category, description, img],
+      (err, results) => {
+        if (err) {
+          console.log(err);
+          res.send(
+            `
                <h1>${err}.</h1><br>
              
-                `);
-                } else{
-                    res.send(`
+                `
+          );
+        } else {
+          res.send(`
                     number of affected row/s: ${results.affectedRows} <br>
                     
                     `);
-                }
-            })
-    }catch(e) {
-        console.log(`Create a new product: ${e.message}`);
-    }
+        }
+      }
+    );
+  } catch (e) {
+    console.log(`Create a new product: ${e.message}`);
+  }
 });
 // get 1 product
-router.get('/products/:id',(req,res)=>{
-    //mySQL query
-    const strQry =
-    `
+router.get("/products/:id", (req, res) => {
+  //mySQL query
+  const strQry = `
     SELECT * FROM products WHERE id = ?;
     `;
-    db.query(strQry,[req.params.id],(err,results) =>{
-        if(err)throw err;
-        res.json({
-            status:200,
-            results:(results.length<=0)?'Sorry no product was found':results
-        })
-    })
+  db.query(strQry, [req.params.id], (err, results) => {
+    if (err) throw err;
+    res.json({
+      status: 200,
+      results: results.length <= 0 ? "Sorry no product was found" : results,
+    });
+  });
 });
 //delete products
-app.delete('/products/:id',(req, res)=>{
-    //mySQL query
-    const strQry =
-    `
+app.delete("/products/:id", (req, res) => {
+  //mySQL query
+  const strQry = `
     DELETE FROM products WHERE id = ?;
     ALTER TABLE products AUTO_INCREMENT = 1;
     `;
-    db.query(strQry, [req.params.id], (err,results)=>{
-        if(err)
-        res.json({
-            status:400,
-            msg: `${err}`
-        });
-        res.json({msg : `delete`});
-    });
+  db.query(strQry, [req.params.id], (err, results) => {
+    if (err)
+      res.json({
+        status: 400,
+        msg: `${err}`,
+      });
+    res.json({ msg: `delete` });
+  });
 });
 //Update products
-router.put("/products/:id",bodyParser.json(),async(req,res)=>{
-    const {title, price, category, description, img} = req.body;
-    let sql = `UPDATE products SET ? WHERE id =${req.params.id}`;
-    const user = {
-        title, price, category, description, img
-    };
-    db.query(sql,user,(err)=>{
-        if(err){
-            console.log(err);
-            res.send(`
+router.put("/products/:id", bodyParser.json(), async (req, res) => {
+  const { title, price, category, description, img } = req.body;
+  let sql = `UPDATE products SET ? WHERE id =${req.params.id}`;
+  const user = {
+    title,
+    price,
+    category,
+    description,
+    img,
+  };
+  db.query(sql, user, (err) => {
+    if (err) {
+      console.log(err);
+      res.send(`
             <h1>${err}.</h1><br>
-            `)
-        } else{
-            res.json({
-                msg:"Updated products Successfully",
-            });
-        }
-    });
+            `);
+    } else {
+      res.json({
+        msg: "Updated products Successfully",
+      });
+    }
+  });
 });
 // get all products
-router.get('/products',(req,res)=>{
-    //mySQL query
-    const strQry =`SELECT * FROM products`;
-    db.query(strQry,(err,results)=>{
-        if(err){
-            console.log(err);
-            res.send(`
+router.get("/products", (req, res) => {
+  //mySQL query
+  const strQry = `SELECT * FROM products`;
+  db.query(strQry, (err, results) => {
+    if (err) {
+      console.log(err);
+      res.send(`
             <h1>${err}.</h1><br>
             <a href="/">Go Back.</a>
-            `)
-        } else{
-            res.json({
-                status:200,
-                results:results,
-            })
-        }
-    })
+            `);
+    } else {
+      res.json({
+        status: 200,
+        results: results,
+      });
+    }
+  });
 });
 
 // CART
@@ -364,132 +379,140 @@ router.get('/products',(req,res)=>{
 //     })
 // }})
 // });
-router.post('/users/:id/cart', bodyParser.json(), (req, res) => {
-    // mySQL query
-    let cart = `SELECT cart FROM users WHERE id = ${req.params.id};`;
-    // function
-    db.query(cart, (err, results) => {
-        if (err) throw err
-        if (results.length > 0) {
-            let cart;
-            if (results[0].cart == null) {
-                cart = []
-            } else {
-                cart = JSON.parse(results[0].cart)
-            }
-            let { id } = req.body;
-            // mySQL query
-            let product = `Select * FROM products WHERE id = ?`;
-            // function
-            db.query(product, id, (err, productData) => {
-                if (err) res.send(`${err}`)
-                let data = {
-                    cart_id: cart.length + 1,
-                    productData
-                }
-                cart.push(data)
-                console.log(cart);
-                let updateCart = `UPDATE users SET cart = ? WHERE id = ${req.params.id}`
-                db.query(updateCart, JSON.stringify(cart), (err, results) => {
-                    if (err) res.json({
-                        status: 400,
-                        msg:`${err}`})
-                    res.json({
-                        status: 200,
-                        cart: results
-                    })
-                })
-            })
-        }
-    })
+router.post("/users/:id/cart", bodyParser.json(), (req, res) => {
+  // mySQL query
+  let cart = `SELECT cart FROM users WHERE id = ${req.params.id};`;
+  // function
+  db.query(cart, (err, results) => {
+    if (err) throw err;
+    if (results.length > 0) {
+      let cart;
+      if (results[0].cart == null) {
+        cart = [];
+      } else {
+        cart = JSON.parse(results[0].cart);
+      }
+      let { id } = req.body;
+      // mySQL query
+      let product = `Select * FROM products WHERE id = ?`;
+      // function
+      db.query(product, id, (err, productData) => {
+        if (err) res.send(`${err}`);
+        let data = {
+          cart_id: cart.length + 1,
+          id: productData[0].id,
+          title: productData[0].title,
+          price: productData[0].price,
+          category: productData[0].category,
+          description: productData[0].description,
+          img: productData[0].img,
+        };
+        cart.push(data);
+        // console.log(cart);
+        let updateCart = `UPDATE users SET cart = ? WHERE id = ${req.params.id}`;
+        db.query(updateCart, JSON.stringify(cart), (err, results) => {
+          if (err)
+            res.json({
+              status: 400,
+              msg: `${err}`,
+            });
+          res.json({
+            status: 200,
+            cart: results,
+            msg : "Added Product to Cart"
+          });
+        });
+      });
+    }
+  });
 });
 //*GET CART ITEMS FROM SPECIFIC USER*
 router.get("/users/:id/cart", (req, res) => {
-// Query
-const strQry = `
+  // Query
+  const strQry = `
 SELECT cart
 FROM users
 WHERE id = ?;
 `;
-db.query(strQry, [req.params.id], (err, results) => {
+  db.query(strQry, [req.params.id], (err, results) => {
     if (err) throw err;
     res.json({
-        status: 200,
-        results: JSON.parse(JSON.stringify(results)),
+      status: 200,
+      results: JSON.parse(results[0].cart),
     });
-});
+  });
 });
 //*GET single ITEMS FROM SPECIFIC USER*
 router.get("/users/:id/cart/:id", (req, res) => {
-// Query
-const strQry = `
+  // Query
+  const strQry = `
 SELECT *
 FROM users
 WHERE id = ?;
 `;
-db.query(strQry, [req.params.id], (err, results) => {
+  db.query(strQry, [req.params.id], (err, results) => {
     if (err) throw err;
     res.json({
-        status: 200,
-        results: JSON.parse(results[0].cart),
+      status: 200,
+      results: JSON.parse(results[0].cart),
     });
-});
+  });
 });
 //*DELETE CART ITEMS FROM SPECIFIC USER*
 router.delete("/users/:id/cart", (req, res) => {
-// Query
-const strQry = `UPDATE users SET cart=null WHERE id=?`;
-db.query(strQry, [req.params.id], (err, results) => {
-    if (err) 
+  // Query
+  const strQry = `UPDATE users SET cart=null WHERE id=?`;
+  db.query(strQry, [req.params.id], (err, results) => {
+    if (err)
+      res.json({
+        status: 400,
+        meg: `${err}`,
+      });
     res.json({
-        status:400,
-        meg: `${err}`
+      status: 200,
+      results: results,
     });
-    res.json({
-        status: 200,
-        results: results,
-    });
-});
+  });
 });
 // Delete by cart id
-router.delete('/users/:id/cart/:cartId', (req,res)=>{
-const delSingleCartId = `
+router.delete("/users/:id/cart/:cartId", (req, res) => {
+  const delSingleCartId = `
     SELECT cart FROM users
     WHERE id = ${req.params.id}
-`
-db.query(delSingleCartId, (err,results)=>{
-    if(err) throw err;
-    if(results.length > 0){
-        if(results[0].cart != null){
-            const result = JSON.parse(results[0].cart).filter((cart)=>{
-                return cart.cart_id != req.params.cartId;
-            })
-            result.forEach((cart,i) => {
-                cart.cart_id = i + 1
-            });
-            const query = `
+`;
+  db.query(delSingleCartId, (err, results) => {
+    if (err) throw err;
+    if (results.length > 0) {
+      if (results[0].cart != null) {
+        const result = JSON.parse(results[0].cart).filter((cart) => {
+          return cart.cart_id != req.params.cartId;
+        });
+        result.forEach((cart, i) => {
+          cart.cart_id = i + 1;
+        });
+        const query = `
                 UPDATE users
                 SET cart = ?
                 WHERE id = ${req.params.id}
-            `
-            db.query(query, [JSON.stringify(result)], (err,results)=>{
-                if(err) throw err;
-                res.json({
-                    status:200,
-                    result: "Successfully deleted item from cart"
-                });
-            })
-        }else{
-            res.json({
-                status:400,
-                meg: `${err}`
-            })
-        }
-    }else{
-        res.json({
-            status:400,
-            meg: `${err}`
+            `;
+        db.query(query, [JSON.stringify(result)], (err, results) => {
+          if (err) throw err;
+          res.json({
+            status: 200,
+            result: "Successfully deleted item from cart",
+          });
         });
+      } else {
+        res.json({
+          status: 400,
+          meg: `${err}`,
+        });
+      }
+    } else {
+      res.json({
+        status: 400,
+        meg: `${err}`,
+      });
     }
-})
-})
+  });
+});
