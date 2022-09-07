@@ -87,35 +87,71 @@ router.get("/products", (req, res) => {
   });
 });
 //register
-app.post("/register", bodyParser.json(), async (req, res) => {
-  try {
-    const bd = req.body;
-    // Encrypting a password
-    //Default value of salt is 10.
-    bd.password = await hash(bd.password, 16);
+// app.post("/register", bodyParser.json(), async (req, res) => {
+//   try {
+//     const bd = req.body;
+//     const emails = `SELECT email FROM users WHERE ?`;
+//     let details = {
+//         email: req.body.email,
+//     }
+//     // Encrypting a password
+//     //Default value of salt is 10.
+//     bd.password = await hash(bd.password, 16);
 
-    //mySQL query
-    const strQry = `
-    insert into users(firstName, lastName, email, phoneNo, password) value(?, ?, ?
-        , ?, ?);
-    `;
-    db.query(
-      strQry,
-      [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password],
-      (err, results) => {
-        if (err) {
-          console.log(err);
-          res.send(`<h1>${err}.</h1><br>
-                `);
-        } else {
-          console.log(results);
-          res.json({ msg: `register successful` });
-        }
-      }
-    );
-  } catch (e) {
-    console.log(`FROM REGISTER: ${e.message}`);
+//     //mySQL query
+//     const strQry = `
+//     insert into users(firstName, lastName, email, phoneNo, password, userRole) value(?, ?, ?
+//         , ?, ?);
+//     `;
+//     db.query(
+//       strQry,
+//       [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password, bd.userRole],
+//       (err, results) => {
+//         if (err) {
+//           console.log(err);
+//           res.send(`<h1>${err}.</h1><br>
+//                 `);
+//         } else {
+//           console.log(results);
+//           res.json({ msg: `register successful` });
+//         }
+//       }
+//     );
+//   } catch (e) {
+//     console.log(`FROM REGISTER: ${e.message}`);
+//   }
+// });
+
+router.post('/register', bodyParser.json(), async (req, res) => {
+  const emails = `SELECT email FROM users WHERE ?`;
+  let details = {
+      email: req.body.email,
   }
+  db.query(emails, details, async (err, results) =>{
+    if(results.length > 0){
+   res.json({
+    msg:"The email already exist"
+  });
+  console.log(results.length)
+    }else{
+    let bd = req.body;
+  console.log(bd);
+  bd.password = await hash(bd.password, 10)
+  if (bd.userRole === '' || bd.userRole === null) {
+    bd.userRole = 'user'
+  }
+  let sql = `INSERT INTO users (firstName, lastName, email, phoneNo, password, userRole)VALUES (?, ?, ?, ?, ?, ?);`
+  db.query(sql, [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password, bd.userRole], (err, results) => {
+    if (err){
+        return {
+          msg: "The email already exist"
+        }
+    }
+    else {
+      res.redirect('/login')
+    }
+  })};
+  })
 });
 //login
 app.post("/login", bodyParser.json(), (req, res) => {
