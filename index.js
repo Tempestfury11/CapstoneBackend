@@ -93,7 +93,7 @@ router.get("/products", (req, res) => {
   });
 });
 //
-
+//Register
 router.post('/register', bodyParser.json(), async (req, res) => {
   const emails = `SELECT email FROM users WHERE ?`;
   let bd = req.body;
