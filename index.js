@@ -71,6 +71,12 @@ router.get("/login", (req, res) => {
     root: __dirname,
   });
 });
+// register PAGE ROUTER
+router.get("/register", (req, res) => {
+  res.status(200).sendFile("./views/register.html", {
+    root: __dirname,
+  });
+});
 // GET ALL PRODUCTS
 router.get("/products", (req, res) => {
   // Query
