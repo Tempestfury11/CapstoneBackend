@@ -53,9 +53,9 @@ router.get("/", (req, res) => {
     root: __dirname,
   });
 });
-// REGISTER PAGE ROUTER
-router.get("/register", (req, res) => {
-  res.status(200).sendFile("./views/register.html", {
+//  PAGE ROUTER
+router.get("/", (req, res) => {
+  res.status(200).sendFile("./views/.html", {
     root: __dirname,
   });
 });
@@ -86,46 +86,13 @@ router.get("/products", (req, res) => {
     });
   });
 });
-//register
-// app.post("/register", bodyParser.json(), async (req, res) => {
-//   try {
-//     const bd = req.body;
-//     const emails = `SELECT email FROM users WHERE ?`;
-//     let details = {
-//         email: req.body.email,
-//     }
-//     // Encrypting a password
-//     //Default value of salt is 10.
-//     bd.password = await hash(bd.password, 16);
-
-//     //mySQL query
-//     const strQry = `
-//     insert into users(firstName, lastName, email, phoneNo, password, userRole) value(?, ?, ?
-//         , ?, ?);
-//     `;
-//     db.query(
-//       strQry,
-//       [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password, bd.userRole],
-//       (err, results) => {
-//         if (err) {
-//           console.log(err);
-//           res.send(`<h1>${err}.</h1><br>
-//                 `);
-//         } else {
-//           console.log(results);
-//           res.json({ msg: `register successful` });
-//         }
-//       }
-//     );
-//   } catch (e) {
-//     console.log(`FROM REGISTER: ${e.message}`);
-//   }
-// });
+//
 
 router.post('/register', bodyParser.json(), async (req, res) => {
   const emails = `SELECT email FROM users WHERE ?`;
+  let bd = req.body;
   let details = {
-      email: req.body.email,
+      email: bd.email,
   }
   db.query(emails, details, async (err, results) =>{
     if(results.length > 0){
@@ -134,21 +101,25 @@ router.post('/register', bodyParser.json(), async (req, res) => {
   });
   console.log(results.length)
     }else{
-    let bd = req.body;
+  
   console.log(bd);
   bd.password = await hash(bd.password, 10)
-  if (bd.userRole === '' || bd.userRole === null) {
+  if ((bd.userRole === null) || (bd.userRole === undefined)) {
     bd.userRole = 'user'
   }
-  let sql = `INSERT INTO users (firstName, lastName, email, phoneNo, password, userRole)VALUES (?, ?, ?, ?, ?, ?);`
-  db.query(sql, [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password, bd.userRole], (err, results) => {
+  let sql = `INSERT INTO users (firstName, lastName, email, phoneNo, password)VALUES (?, ?, ?, ?, ?);`
+  db.query(sql, [bd.firstName, bd.lastName, bd.email, bd.phoneNo, bd.password], (err, results) => {
     if (err){
         return {
           msg: "The email already exist"
         }
     }
     else {
-      res.redirect('/login')
+      console.log(results)
+      res.json({
+        msg : 'You are ready to get games',
+        userData : results
+      })
     }
   })};
   })
@@ -165,8 +136,14 @@ app.post("/login", bodyParser.json(), (req, res) => {
         `;
     db.query(strQry, async (err, results) => {
       if (err) throw err;
-      switch (true) {
-        case await compare(password, results[0].password):
+      console.log(results)
+      if(results.length === 0){
+        res.json({
+          msg: 'Email does not exist'
+        })
+      }else {
+        console.log(results[0])
+        await compare(password, results[0].password)
           jwt.sign(
             JSON.stringify(results[0]),
             process.env.secret,
@@ -178,13 +155,7 @@ app.post("/login", bodyParser.json(), (req, res) => {
                 token: token,
               });
             }
-          );
-          break;
-        default:
-          res.json({
-            status: 400,
-            msg: "Login Failed.",
-          });
+          )
       }
     });
   } catch (e) {
@@ -260,7 +231,7 @@ router.put("/users/:id", bodyParser.json(), async (req, res) => {
       console.log(err);
       res.send(`
             <h1>${err}.</h1><br>
-            <a href="/register">Go Back.</a>
+            <a href="/">Go Back.</a>
             `);
     } else {
       res.json({
